@@ -1,0 +1,5 @@
+Starting Dynare (version 6.5).
+Calling Dynare with arguments: none
+Starting preprocessing of the model file ...
+ERROR: in the 'steady_state_model' block, variable 'I_Z_Y_ratio' is undefined in the declaration of variable 'C_Y_ratio'
+Preprocessing time: 0h00m00s.
