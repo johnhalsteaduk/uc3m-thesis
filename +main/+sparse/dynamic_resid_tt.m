@@ -6,7 +6,7 @@ T_order = 0;
 if size(T, 1) < 3
     T = [T; NaN(3 - size(T, 1), 1)];
 end
-T(1) = exp(y(9))*y(4)^params(1);
-T(2) = y(13)^(1-params(1));
-T(3) = T(1)*T(2);
+T(1) = y(3)^params(1);
+T(2) = exp(y(16)*(-params(9)))*T(1);
+T(3) = y(12)^(1-params(1));
 end

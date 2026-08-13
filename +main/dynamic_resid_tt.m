@@ -20,8 +20,8 @@ function T = dynamic_resid_tt(T, y, x, params, steady_state, it_)
 
 assert(length(T) >= 3);
 
-T(1) = exp(y(3))*y(2)^params(1);
-T(2) = y(7)^(1-params(1));
-T(3) = T(1)*T(2);
+T(1) = y(1)^params(1);
+T(2) = exp(y(10)*(-params(9)))*T(1);
+T(3) = y(6)^(1-params(1));
 
 end

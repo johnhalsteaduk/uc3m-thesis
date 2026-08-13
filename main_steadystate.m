@@ -14,7 +14,6 @@ function [ys, params, check] = main_steadystate(ys, exo, M_, options_)
     % =====================================================================
     % STEP 1: ANALYTICAL BASELINE RBC
     % =====================================================================
-    a = 0;
     R_ss = 1/beta - (1-delta);
 
     K_Y_ratio = alpha / R_ss;

@@ -23,13 +23,13 @@ if T_flag
     T = main.dynamic_resid_tt(T, y, x, params, steady_state, it_);
 end
 residual = zeros(8, 1);
-    residual(1) = (1/y(4)) - (params(2)/y(11)*(1+y(12)-params(3)));
-    residual(2) = (y(9)/y(4)) - (params(6)*y(7)^params(4));
-    residual(3) = (y(5)) - (y(6)-(1-params(3))*y(2));
-    residual(4) = (y(10)) - (y(4)+y(5));
-    residual(5) = (y(10)) - (T(3));
-    residual(6) = (y(8)) - (y(10)*params(1)/y(2));
-    residual(7) = (y(9)) - (y(10)*(1-params(1))/y(7));
-    residual(8) = (y(3)) - (params(5)*y(1)-x(it_, 1));
+    residual(1) = (1/y(3)) - (params(2)/y(11)*(1+y(12)-params(3)));
+    residual(2) = (y(8)/y(3)) - (params(6)*y(6)^params(4));
+    residual(3) = (y(4)) - (y(5)-(1-params(3)-params(8)*y(10))*y(1));
+    residual(4) = (y(9)) - (y(3)+y(4));
+    residual(5) = (y(9)) - (T(2)*T(3));
+    residual(6) = (y(7)) - (y(9)*params(1)/y(1));
+    residual(7) = (y(8)) - (y(9)*(1-params(1))/y(6));
+    residual(8) = (y(10)) - (params(7)*y(2)+x(it_, 1));
 
 end

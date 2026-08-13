@@ -1,13 +1,12 @@
-@#define MARTO = 0
-@#define SHOCK = 1
+@#define DEBT = 0
 
 @#include "parameters.mod"
 
 model;
-    @#if MARTO == 0
-        @#include "model_core.mod"
+    @#if DEBT == 1
+        @#include "model_debt.mod"
     @#else
-        @#include "model_marto.mod"
+        @#include "model_core.mod"
     @#endif
 end;
 
@@ -21,8 +20,8 @@ shocks;
     var e; stderr 0.01;
 end;
 
-@#if MARTO == 0
-    stoch_simul(order=1, irf=40) Y C I N R W;
+@#if DEBT == 1
+    
 @#else
-    stoch_simul(order=1, irf=40) Y C I N R W Z I_Z;
+    stoch_simul(order=1, irf=40) Y C I N R W;
 @#endif
