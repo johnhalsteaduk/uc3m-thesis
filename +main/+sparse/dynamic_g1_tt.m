@@ -4,7 +4,7 @@ if T_order >= 1
 end
 [T_order, T] = main.sparse.dynamic_resid_tt(y, x, params, steady_state, T_order, T);
 T_order = 1;
-if size(T, 1) < 3
-    T = [T; NaN(3 - size(T, 1), 1)];
+if size(T, 1) < 5
+    T = [T; NaN(5 - size(T, 1), 1)];
 end
 end

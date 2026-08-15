@@ -1,9 +1,6 @@
 # Ignore everything
 *
 
-# Allow directories to be traversed
-!*/
-
 # Track .m and .mod files
 !*.m
 !*.mod
