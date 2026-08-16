@@ -1,16 +1,10 @@
-@#define DEBT = 0
-@#define CRDC = 1
+@#define DEBT = 1
+@#define CRDC = 0
 
 @#include "parameters.mod"
 
 model;
-    @#if DEBT == 1
-        @#include "model_debt.mod"
-        @#elseif CRDC == 1
-        @#include "model_crdc.mod"
-        @#else
-        @#include "model_core.mod"
-    @#endif
+    @#include "model_core.mod"
 end;
 
 % call the external steady state file
@@ -24,7 +18,7 @@ shocks;
 end;
 
 @#if DEBT == 1 || CRDC == 1
-    stoch_simul(order=1, irf=40) Y C I N R W D R_d;
+    stoch_simul(order=1, irf=40) Y C I_k N R W D R_d;
 @#else
-    stoch_simul(order=1, irf=40) Y C I N R W;
+    stoch_simul(order=1, irf=40) Y C I_k N R W;
 @#endif
