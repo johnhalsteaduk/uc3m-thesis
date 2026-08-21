@@ -1,5 +1,6 @@
-@#define DEBT = 1
+@#define DEBT = 0
 @#define CRDC = 0
+@#define FUND = 1
 
 @#include "parameters.mod"
 
@@ -14,11 +15,19 @@ steady;
 resid; 
 
 shocks;
-    var e_nd; stderr 1;
+    var e_d; stderr 1;
 end;
 
-@#if DEBT == 1 || CRDC == 1
-    stoch_simul(order=1, irf=40) Y C I_k N R W D R_d;
+@#if DEBT == 1
+    stoch_simul(order=1, irf=40) Y C I_k N R W B R_b;
+    save('results_debt.mat', 'oo_');
+@#elseif CRDC == 1
+    stoch_simul(order=1, irf=40) Y C I_k N R W B R_b;
+    save('results_crdc.mat', 'oo_');
+@#elseif FUND == 1
+    stoch_simul(order=1, irf=40) Y C I_k N R W;
+    save('results_fund.mat', 'oo_');
 @#else
     stoch_simul(order=1, irf=40) Y C I_k N R W;
+    save('results_baseline.mat', 'oo_');
 @#endif
