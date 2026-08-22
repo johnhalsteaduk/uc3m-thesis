@@ -73,9 +73,7 @@ function [ys, params, check] = main_steadystate(ys, exo, M_, options_)
         % --- BASELINE RBC (TAX FINANCED) ---
         L_ss = T_ss - (tau_zi + tau_za)*Y_ss;
     end
-    
-    % Pass the computed L_ss back to Dynare's parameter array
-    params(strcmp(param_names, 'L_ss')) = L_ss;
+   
 
     % Calculate Final Levels
     K_ss = K_Y_ratio * Y_ss;
@@ -90,6 +88,12 @@ function [ys, params, check] = main_steadystate(ys, exo, M_, options_)
     % Exogenous and structural steady states
     D_ss = 0;
     CRDC_ss = 0; 
+
+    % Pass computed ss params back to Dynare's parameter array
+    params(strcmp(param_names, 'L_ss')) = L_ss;
+    if any(strcmp(param_names, 'Z_i_ss'))
+        params(strcmp(param_names, 'Z_i_ss')) = Z_i_ss;
+    end;
     
     % Map to dictionary based on active extension
     endo_names_in_model = strtrim(cellstr(M_.endo_names));

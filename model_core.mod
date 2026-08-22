@@ -34,8 +34,13 @@ S = S_ss - omega_s*D;
 % 12. Tax revenue
 T = tau_c*C;
 
-% 13. Standard public investment rule
-I_zi = tau_zi * Y;
+@#if ACCEL_RECON == 1
+    % 13. Accelerated standard public investment rule
+    I_zi = tau_zi * Y + phi_z * (Z_i_ss - Z_i);
+@#else
+    % 13. Baseline standard public investment rule
+    I_zi = tau_zi * Y;
+@#endif
 
 % 14. Adaptation public investment rule
 I_za = tau_za * Y;

@@ -3,6 +3,10 @@ var C I_k K N R W Y D Z Z_i Z_a I_zi I_za S T tau_c L;
 varexo e_d;
 parameters alpha beta delta_k delta_za delta_zi eta psi rho_d omega_k omega_z omega_s psi_z rho_z xi nu_a kappa v tau_zi tau_za tau_c_ss phi_c S_ss L_ss;
 
+@#if ACCEL_RECON == 1
+    parameters phi_z Z_i_ss;
+@#endif
+
 @#if DEBT == 1 || CRDC == 1
     var B R_b CRDC;
     parameters eta_g B_ss R_star;
@@ -35,6 +39,11 @@ tau_c_ss = 0.125;   % Steady-state VAT
 phi_c    = 0.10;    % Tax reaction to debt deviations
 S_ss     = 0.6;     % Steady state public investment
 L_ss     = 0;       % Lump sum transfer placeholder
+
+@#if ACCEL_RECON == 1
+    phi_z  = 0.15; % Reconstruction speed;
+    Z_i_ss = 0;    % Steady state standard public capital placeholder;
+@#endif
 
 @#if DEBT == 1 || CRDC == 1
     eta_g  = 0.001;      % Debt-elastic risk premium parameter
