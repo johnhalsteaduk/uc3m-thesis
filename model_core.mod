@@ -1,5 +1,5 @@
 % 1. Euler equation
-(1/(C*(1+tau_c)))*(1 + v*(I_k/K(-1) - delta_k)) = beta*(1/(C(+1)*(1+tau_c(+1))))*(R(+1) + 1 - delta_k - (v/2)*(I_k(+1)/K - delta_k)^2 + v*(I_k(+1)/K - delta_k)*(K(+1)/K));  
+(1/(C_r*(1+tau_c)))*(1 + v*(I_k/K(-1) - delta_k)) = beta*(1/(C_r(+1)*(1+tau_c(+1))))*(R(+1) + 1 - delta_k - (v/2)*(I_k(+1)/K - delta_k)^2 + v*(I_k(+1)/K - delta_k)*(K(+1)/K));  
 
 % 2. Labour supply
 W/(C*(1+tau_c)) = psi*N^eta;
@@ -19,81 +19,78 @@ W = (1 - alpha)*Y/N;
 % 7. Natural disaster shock
 D = rho_d*D(-1) + e_d;
 
-% 8. Standard public capital evolution
+% 8. Sovereign Risk Penalty
+D_r = rho_d * D_r(-1) + omega_r * e_d;
+
+% 9. Standard public capital evolution
 Z_i = (1 - delta_zi - omega_z*D/(1 + kappa*Z_a(-1)))*Z_i(-1) + S*I_zi;
 
-% 9. Adaptation public capital evolution
+% 10. Adaptation public capital evolution
 Z_a = (1 - delta_za - omega_z*D/(1 + kappa*Z_a(-1)))*Z_a(-1) + S*I_za;
 
-% 10. Effective public capital (CES Aggregator)
+% 11. Effective public capital (CES Aggregator)
 Z = (rho_z^(1/xi) * Z_i^((xi-1)/xi) + (1-rho_z)^(1/xi) * (nu_a*Z_a)^((xi-1)/xi))^(xi/(xi-1));
 
-% 11. Public investment efficiency
+% 12. Public investment efficiency
 S = S_ss - omega_s*D;
 
-% 12. Tax revenue
+% 13. Tax revenue
 T = tau_c*C;
 
+% 14. Household Budget Constraint
+C*(1+tau_c) + I_k = Y + L_ss;
+
 @#if ACCEL_RECON == 1
-    % 13. Accelerated standard public investment rule
+    % 15. Accelerated standard public investment rule
     I_zi = tau_zi * Y + phi_z * (Z_i_ss - Z_i);
 @#else
-    % 13. Baseline standard public investment rule
+    % 15. Baseline standard public investment rule
     I_zi = tau_zi * Y;
 @#endif
 
-% 14. Adaptation public investment rule
+% 16. Adaptation public investment rule
 I_za = tau_za * Y;
 
-% 15. Constant Lump-sum Transfers
-L = L_ss;
+% 17. Non-Ricardian Budget Constraint
+C_c*(1+tau_c) = W*N + L_ss;
 
-@#if DEBT == 1 || CRDC == 1
-    % 16. Government Budget Constraint
-    B = (1 + R_b(-1)*(1 - CRDC))*B(-1) + I_zi + I_za + L - T;
+% 18. Aggregate Consumption
+C = (1 - lambda_c)*C_r + lambda_c*C_c;
 
-    % 17. Resource constraint (Physical goods only)
-    Y = C + I_k + I_zi + I_za;
+% 19. Risk premium
+R_b = (1 + D_r) * (R_star + eta_g*(B/Y - B_Y_ratio));
 
-    % 18. Fiscal Rule for Consumption Tax (Locked Flat)
-    tau_c = tau_c_ss; 
-    
-    % 19. Risk premium
-    R_b = R_star + eta_g*(B - B_ss);
-  
-    @#if CRDC == 1
-        @#define crdc_lags = 4
-        % 20. CRDC MA(1) tracker function
-        CRDC = e_d
-        @#for i in 1:crdc_lags
-            + e_d(-@{i})
-        @#endfor
-        ;
-    @#else
-        % 20. CRDC inactive
-        CRDC = 0;
-    @#endif
+@#if DEBT == 1
+    % 20. Government Budget Constraint
+    B = (1 + R_b(-1))*B(-1) + I_zi + I_za + L_ss - T;
 
+    % 21. Fiscal Rule for Consumption Tax (Locked Flat)
+    tau_c = tau_c_ss;
+@#elseif  CRDC == 1
+    % 20. Government Budget Constraint
+    B = (1 + R_b(-1) - CRDC*(R_b(-1) - R_star))*B(-1) + I_zi + I_za + L_ss - T;
+
+    % 21. Fiscal Rule for Consumption Tax (Locked Flat)
+    tau_c = tau_c_ss;
 @#elseif FUND == 1
-    % 16. Government Budget Constraint
-    T + W_f = I_zi + I_za + I_f + L; 
-
-    % 17. Resource constraint
-    Y = C + I_k + I_zi + I_za;
+    % 20. Government Budget Constraint
+    B = (1 + R_star)*B(-1) + I_zi + I_za + I_f + L_ss - T - W_f;
     
-    % 18. Contingency fund accumulation
+    % 21. Debt Rule (No new borrowing)
+    B = B(-1);
+
+    % 22. Contingency fund accumulation
     F = (1 + R_star)*F(-1) + I_f - W_f;
     
-    % 19. Fund replenishment rule
+    % 23. Fund replenishment rule
     I_f = tau_f*(F_target * Y - F(-1)) - R_star*F(-1);
     
-    % 20. Disaster withdrawal rule 
+    % 24. Disaster withdrawal rule 
     W_f = omega_f * D * F(-1);
-
 @#else
-    % 16. Government Budget Constraint
-    T = I_zi + I_za + L; 
+    % 20. Government Budget Constraint
+    B = (1 + R_star)*B(-1) + I_zi + I_za + L_ss - T;
 
-    % 17. Resource constraint
-    Y = C + I_k + I_zi + I_za;
+    % 21. Debt Rule (No new borrowing)
+    B = B(-1);
 @#endif

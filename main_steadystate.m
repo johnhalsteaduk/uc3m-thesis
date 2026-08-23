@@ -1,4 +1,4 @@
-function [ys, params, check] = main_steadystate(ys, exo, M_, options_)
+function [ys, params, check] = main_steadystate(ys, ~, M_, ~)
     % Initialization
     check = 0; 
     params = M_.params; 
@@ -20,6 +20,9 @@ function [ys, params, check] = main_steadystate(ys, exo, M_, options_)
     tau_za   = params(strcmp(param_names, 'tau_za'));
     tau_c_ss = params(strcmp(param_names, 'tau_c_ss'));
     S_ss     = params(strcmp(param_names, 'S_ss'));
+    B_Y_ratio = params(strcmp(param_names, 'B_Y_ratio'));
+    R_star   = params(strcmp(param_names, 'R_star'));
+    lambda_c = params(strcmp(param_names, 'lambda_c'));
 
     R_ss = 1/beta - (1-delta_k);
     K_Y_ratio = alpha / R_ss;
@@ -41,37 +44,34 @@ function [ys, params, check] = main_steadystate(ys, exo, M_, options_)
     % Output scale factor derived from production function exponent algebra
     X = (K_Y_ratio^alpha * Z_Y_ratio^psi_z)^(1/(1 - alpha - psi_z));
     
-    % Common consumption resource share
-    Omega_C = 1 - I_Y_ratio - tau_zi - tau_za;
+    if any(strcmp(param_names, 'F_target'))
+        F_target = params(strcmp(param_names, 'F_target'));
+    else
+        F_target = 0;
+    end
 
+    % Common consumption resource share
+    Omega_C = 1 - I_Y_ratio - tau_zi - tau_za - R_star * B_Y_ratio + R_star * F_target;
+    
     N_ss = ((1-alpha) / (psi * (1+tau_c_ss) * Omega_C))^(1/(1+eta));
     Y_ss = X * N_ss^((1-alpha)/(1-alpha-psi_z));
     C_ss = Omega_C * Y_ss;
     T_ss = tau_c_ss * C_ss;
+    B_ss = B_Y_ratio * Y_ss;
+    R_b_ss = R_star;
 
     % Branching logic
-    if any(strcmp(param_names, 'B_ss'))
-        % --- DEBT EXTENSION ---
-        B_ss = params(strcmp(param_names, 'B_ss'));
-        R_star = params(strcmp(param_names, 'R_star'));
-        R_b_ss = R_star;
-        
-        L_ss = T_ss - (tau_zi + tau_za)*Y_ss - R_b_ss * B_ss;
-        
-    elseif any(strcmp(param_names, 'F_target'))
+    if any(strcmp(param_names, 'F_target'))
         % --- FUND EXTENSION ---
         F_target = params(strcmp(param_names, 'F_target'));
-        R_star = params(strcmp(param_names, 'R_star'));
-        
         F_ss = F_target * Y_ss;
         I_f_ss = -R_star * F_ss; 
         W_f_ss = 0;
-        
-        L_ss = T_ss - (tau_zi + tau_za)*Y_ss - I_f_ss;
-        
+        L_ss = T_ss - (tau_zi + tau_za)*Y_ss - I_f_ss - R_star * B_ss;
     else
-        % --- BASELINE RBC (TAX FINANCED) ---
-        L_ss = T_ss - (tau_zi + tau_za)*Y_ss;
+        % --- BASELINE, DEBT, and CRDC ---
+        L_ss = T_ss - (tau_zi + tau_za)*Y_ss - R_star * B_ss;
+        F_ss = 0; I_f_ss = 0; W_f_ss = 0;
     end
    
 
@@ -84,37 +84,31 @@ function [ys, params, check] = main_steadystate(ys, exo, M_, options_)
     Z_a_ss = (S_ss * I_za_ss) / delta_za;
     Z_ss = Z_Y_ratio * Y_ss;
     W_ss = (1-alpha) * Y_ss / N_ss;
+
+    % Non-Ricardian and Ricardian consumption steady states
+    C_c_ss = (W_ss * N_ss + L_ss) / (1 + tau_c_ss);
+    C_r_ss = (C_ss - lambda_c * C_c_ss) / (1 - lambda_c);
     
     % Exogenous and structural steady states
     D_ss = 0;
+    D_r_ss = 0;
     CRDC_ss = 0; 
 
     % Pass computed ss params back to Dynare's parameter array
     params(strcmp(param_names, 'L_ss')) = L_ss;
     if any(strcmp(param_names, 'Z_i_ss'))
         params(strcmp(param_names, 'Z_i_ss')) = Z_i_ss;
-    end;
+    end
     
     % Map to dictionary based on active extension
     endo_names_in_model = strtrim(cellstr(M_.endo_names));
     
-    if any(strcmp(endo_names_in_model, 'CRDC'))
-        % --- CRDC ---
-        endo_dict = dictionary(["Y", "K", "N", "C", "I_k", "R", "W", "D", "Z_i", "Z_a", "I_zi", "I_za", "S", "Z", "T", "B", "R_b", "CRDC", "tau_c", "L"], ...
-                               [Y_ss, K_ss, N_ss, C_ss, I_ss, R_ss, W_ss, D_ss, Z_i_ss, Z_a_ss, I_zi_ss, I_za_ss, S_ss, Z_ss, T_ss, B_ss, R_b_ss, CRDC_ss, tau_c_ss, L_ss]);
-    elseif any(strcmp(endo_names_in_model, 'B'))
-        % --- DEBT ---
-        endo_dict = dictionary(["Y", "K", "N", "C", "I_k", "R", "W", "D", "Z_i", "Z_a", "I_zi", "I_za", "S", "Z", "T", "B", "R_b", "tau_c", "L"], ...
-                               [Y_ss, K_ss, N_ss, C_ss, I_ss, R_ss, W_ss, D_ss, Z_i_ss, Z_a_ss, I_zi_ss, I_za_ss, S_ss, Z_ss, T_ss, B_ss, R_b_ss, tau_c_ss, L_ss]);
-    elseif any(strcmp(endo_names_in_model, 'F'))
-        % --- FUND ---
-        endo_dict = dictionary(["Y", "K", "N", "C", "I_k", "R", "W", "D", "Z_i", "Z_a", "I_zi", "I_za", "S", "Z", "T", "F", "I_f", "W_f", "tau_c", "L"], ...
-                               [Y_ss, K_ss, N_ss, C_ss, I_ss, R_ss, W_ss, D_ss, Z_i_ss, Z_a_ss, I_zi_ss, I_za_ss, S_ss, Z_ss, T_ss, F_ss, I_f_ss, W_f_ss, tau_c_ss, L_ss]);
-    else
-        % --- BASELINE ---
-        endo_dict = dictionary(["Y", "K", "N", "C", "I_k", "R", "W", "D", "Z_i", "Z_a", "I_zi", "I_za", "S", "Z", "T", "tau_c", "L"], ...
-                               [Y_ss, K_ss, N_ss, C_ss, I_ss, R_ss, W_ss, D_ss, Z_i_ss, Z_a_ss, I_zi_ss, I_za_ss, S_ss, Z_ss, T_ss, tau_c_ss, L_ss]);
-    end
+    endo_dict = dictionary(["Y", "K", "N", "C", "C_r", "C_c", "I_k", "R", "W", "D", ...
+                            "Z_i", "Z_a", "I_zi", "I_za", "S", "Z", "T", "B", "tau_c", ...
+                            "R_b", "CRDC", "D_r", "F", "I_f", "W_f"], ...
+                           [Y_ss, K_ss, N_ss, C_ss, C_r_ss, C_c_ss, I_ss, R_ss, W_ss, D_ss, ...
+                            Z_i_ss, Z_a_ss, I_zi_ss, I_za_ss, S_ss, Z_ss, T_ss, B_ss, tau_c_ss, ...
+                            R_b_ss, CRDC_ss, D_r_ss, F_ss, I_f_ss, W_f_ss]);
 
     dict_keys = keys(endo_dict);
     fprintf('\nNumber of steady state vars: %d\n', length(dict_keys));

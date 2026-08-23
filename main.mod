@@ -15,6 +15,9 @@ shocks;
     var e_d;
     periods 1;
     values 0.25;
+    @#if CRDC == 1
+        var CRDC; periods 2:3; values 1;
+    @#endif
 end;
 
 perfect_foresight_setup(periods=200);

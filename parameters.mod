@@ -1,23 +1,22 @@
 % 1. VARIABLES AND PARAMETERS
-var C I_k K N R W Y D Z Z_i Z_a I_zi I_za S T tau_c L;
+var C I_k K N R W Y D Z Z_i Z_a I_zi I_za S T tau_c B C_r C_c D_r R_b;
 varexo e_d;
-parameters alpha beta delta_k delta_za delta_zi eta psi rho_d omega_k omega_z omega_s psi_z rho_z xi nu_a kappa v tau_zi tau_za tau_c_ss phi_c S_ss L_ss;
+parameters alpha beta delta_k delta_za delta_zi eta psi rho_d omega_k omega_z omega_s omega_r psi_z rho_z xi nu_a kappa v tau_zi tau_za tau_c_ss phi_c S_ss L_ss R_star B_Y_ratio lambda_c eta_g;
 
 @#if ACCEL_RECON == 1
     parameters phi_z Z_i_ss;
 @#endif
 
 @#if DEBT == 1 || CRDC == 1
-    var B R_b CRDC;
-    parameters eta_g B_ss R_star;
+    varexo CRDC;
 @#elseif FUND == 1
     var F I_f W_f;
-    parameters F_target tau_f omega_f R_star;
+    parameters F_target tau_f omega_f;
 @#endif
 
 % 2. SET PARAMETERS
 alpha    = 0.35;    % Capital share (midpoint between traded 0.3 and non-traded 0.4)
-beta     = 0.99;    % Discount factor
+beta     = 0.985;   % Discount factor, calibrated for R_star of 1.5%
 delta_k  = 0.05;    % Private capital depreciation rate
 delta_zi = 0.075;   % Standard infrastructure depreciation rate
 delta_za = 0.03;    % Adaptation infrastructure depreciation rate
@@ -27,6 +26,7 @@ rho_d    = 0.80;    % Natural disaster shock persistence
 omega_k  = 0.30;    % Private capital destruction scale
 omega_z  = 0.40;    % Public capital destruction scale
 omega_s  = 0.5;     % Public investment efficiency loss
+omega_r  = 0.15;    % Sovereign risk penalty factor (source: 2015 Standard & Poor's report)
 psi_z    = 0.0312;  % Elasticity of output wrt public infrastructure
 rho_z    = 0.90;    % CES weight tilted in favor of standard infrastructure
 xi       = 10.0;    % CES elasticity of substitution (High substitutability proxy for infinity)
@@ -39,19 +39,18 @@ tau_c_ss = 0.125;   % Steady-state VAT
 phi_c    = 0.10;    % Tax reaction to debt deviations
 S_ss     = 0.6;     % Steady state public investment
 L_ss     = 0;       % Lump sum transfer placeholder
+B_Y_ratio = 0.256;  % Steady-state debt-to-GDP ratio
+R_star   = 1/beta - 1; % Steady-state international interest rate
+lambda_c = 0.34;    % Percentage of liquidity constrained households
+eta_g    = 0.002;   % Debt-elastic risk premium parameter
 
 @#if ACCEL_RECON == 1
-    phi_z  = 0.15; % Reconstruction speed;
+    phi_z  = 0.3; % Reconstruction speed;
     Z_i_ss = 0;    % Steady state standard public capital placeholder;
 @#endif
 
-@#if DEBT == 1 || CRDC == 1
-    eta_g  = 0.001;      % Debt-elastic risk premium parameter
-    B_ss   = 0.60;       % Steady-state debt-to-GDP ratio
-    R_star = 1/beta - 1; % Steady-state international interest rate
-@#elseif FUND == 1
+@#if FUND == 1
     F_target = 0.10;
     tau_f    = 0.05;
     omega_f  = 0.50;
-    R_star   = 1/beta - 1; 
 @#endif
