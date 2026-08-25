@@ -1,9 +1,7 @@
-% Ensure you have generated these four files before running:
+% Ensure you have generated these files before running:
 file_no_accel = 'results_baseline_no_accel.mat';
-file_tax_accel = 'results_baseline_accel.mat'; % Baseline = Tax-financed
-file_debt_accel = 'results_debt_accel.mat';
-file_grants_accel = 'results_debt_accel_grants.mat'; % New Grants file
-
+file_tax_accel = 'results_baseline_accel.mat'; % Baseline = Pure Tax-financed
+file_debt_accel = 'results_debt_only_accel.mat'; % Pure Debt-financed (locked tax)
 time_horizon = 25; % Marto plots a 25-year horizon
 
 %% --- FIGURE 1: SHOCK TRANSMISSION (Marto Fig 2) ---
@@ -70,17 +68,14 @@ legend('Public investment efficiency', 'Real interest rate (%)', 'Location', 'be
 
 %% --- FIGURE 2: POLICY COMPARISON (Marto Fig 3) ---
 figure('Name', 'Marto Fig 3: Recovery Policies', 'Position', [120, 120, 1000, 600]);
-
-d_debt   = load(file_debt_accel, 'oo_', 'M_');
-d_grants = load(file_grants_accel, 'oo_', 'M_'); % Load Grants Scenario
+d_debt = load(file_debt_accel, 'oo_', 'M_');
 
 % 1. Consumption Tax Rate (tau_c)
 subplot(2, 3, 1); hold on;
 plot(1:time_horizon, get_sim(d_debt, 'tau_c') * 100, 'k-', 'LineWidth', 1.5);
 plot(1:time_horizon, get_sim(d_ac, 'tau_c') * 100, 'r*-', 'LineWidth', 1.5);
-
 title('Consumption Tax Rate (%)'); 
-legend('Debt-financed', 'Tax-financed', 'Grants are Welcome', 'Location', 'best');
+legend('Debt-financed', 'Tax-financed', 'Location', 'best');
 
 % 2. Total Public Debt (% of GDP)
 subplot(2, 3, 2); hold on;

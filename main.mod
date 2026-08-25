@@ -16,7 +16,7 @@ shocks;
     periods 1;
     values 0.25;
     @#if CRDC == 1
-        var CRDC; periods 2:3; values 1;
+        var e_crdc; periods 2:3; values 1;
     @#endif
 end;
 

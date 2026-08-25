@@ -13,8 +13,6 @@ function [ys, params, check] = main_steadystate(ys, ~, M_, ~)
     eta      = params(strcmp(param_names, 'eta'));
     psi      = params(strcmp(param_names, 'psi'));
     psi_z    = params(strcmp(param_names, 'psi_z'));
-    rho_z    = params(strcmp(param_names, 'rho_z'));
-    xi       = params(strcmp(param_names, 'xi'));
     nu_a     = params(strcmp(param_names, 'nu_a'));
     tau_zi   = params(strcmp(param_names, 'tau_zi'));
     tau_za   = params(strcmp(param_names, 'tau_za'));
@@ -30,28 +28,13 @@ function [ys, params, check] = main_steadystate(ys, ~, M_, ~)
     
     Z_i_Y_ratio = (S_ss * tau_zi) / delta_zi;
     Z_a_Y_ratio = (S_ss * tau_za) / delta_za;
-    
-    % Handle CES Aggregator limits
-    if isinf(xi)
-        Z_Y_ratio = rho_z * Z_i_Y_ratio + (1-rho_z) * nu_a * Z_a_Y_ratio;
-    elseif xi == 1
-        Z_Y_ratio = (Z_i_Y_ratio)^rho_z * (nu_a * Z_a_Y_ratio)^(1-rho_z);
-    else
-        Z_Y_ratio = (rho_z^(1/xi) * Z_i_Y_ratio^((xi-1)/xi) + ...
-                    (1-rho_z)^(1/xi) * (nu_a*Z_a_Y_ratio)^((xi-1)/xi))^(xi/(xi-1));
-    end
+    Z_Y_ratio = Z_i_Y_ratio + nu_a * Z_a_Y_ratio;
     
     % Output scale factor derived from production function exponent algebra
     X = (K_Y_ratio^alpha * Z_Y_ratio^psi_z)^(1/(1 - alpha - psi_z));
-    
-    if any(strcmp(param_names, 'F_target'))
-        F_target = params(strcmp(param_names, 'F_target'));
-    else
-        F_target = 0;
-    end
 
     % Common consumption resource share
-    Omega_C = 1 - I_Y_ratio - tau_zi - tau_za - R_star * B_Y_ratio + R_star * F_target;
+    Omega_C = 1 - I_Y_ratio - tau_zi - tau_za - R_star * B_Y_ratio;
     
     N_ss = ((1-alpha) / (psi * (1+tau_c_ss) * Omega_C))^(1/(1+eta));
     Y_ss = X * N_ss^((1-alpha)/(1-alpha-psi_z));
@@ -59,20 +42,8 @@ function [ys, params, check] = main_steadystate(ys, ~, M_, ~)
     T_ss = tau_c_ss * C_ss;
     B_ss = B_Y_ratio * Y_ss;
     R_b_ss = R_star;
-
-    % Branching logic
-    if any(strcmp(param_names, 'F_target'))
-        % --- FUND EXTENSION ---
-        F_target = params(strcmp(param_names, 'F_target'));
-        F_ss = F_target * Y_ss;
-        I_f_ss = -R_star * F_ss; 
-        W_f_ss = 0;
-        L_ss = T_ss - (tau_zi + tau_za)*Y_ss - I_f_ss - R_star * B_ss;
-    else
-        % --- BASELINE, DEBT, and CRDC ---
-        L_ss = T_ss - (tau_zi + tau_za)*Y_ss - R_star * B_ss;
-        F_ss = 0; I_f_ss = 0; W_f_ss = 0;
-    end
+    L_ss = T_ss - (tau_zi + tau_za)*Y_ss - R_star * B_ss;
+    F_ss = 0; I_f_ss = 0; W_f_ss = 0;
    
 
     % Calculate Final Levels
@@ -91,13 +62,14 @@ function [ys, params, check] = main_steadystate(ys, ~, M_, ~)
     
     % Exogenous and structural steady states
     D_ss = 0;
-    D_r_ss = 0;
-    CRDC_ss = 0; 
 
     % Pass computed ss params back to Dynare's parameter array
     params(strcmp(param_names, 'L_ss')) = L_ss;
     if any(strcmp(param_names, 'Z_i_ss'))
         params(strcmp(param_names, 'Z_i_ss')) = Z_i_ss;
+    end
+    if any(strcmp(param_names, 'B_ss'))
+        params(strcmp(param_names, 'B_ss')) = B_ss;
     end
     
     % Map to dictionary based on active extension
@@ -105,10 +77,10 @@ function [ys, params, check] = main_steadystate(ys, ~, M_, ~)
     
     endo_dict = dictionary(["Y", "K", "N", "C", "C_r", "C_c", "I_k", "R", "W", "D", ...
                             "Z_i", "Z_a", "I_zi", "I_za", "S", "Z", "T", "B", "tau_c", ...
-                            "R_b", "CRDC", "D_r", "F", "I_f", "W_f"], ...
+                            "R_b"], ...
                            [Y_ss, K_ss, N_ss, C_ss, C_r_ss, C_c_ss, I_ss, R_ss, W_ss, D_ss, ...
                             Z_i_ss, Z_a_ss, I_zi_ss, I_za_ss, S_ss, Z_ss, T_ss, B_ss, tau_c_ss, ...
-                            R_b_ss, CRDC_ss, D_r_ss, F_ss, I_f_ss, W_f_ss]);
+                            R_b_ss]);
 
     dict_keys = keys(endo_dict);
     fprintf('\nNumber of steady state vars: %d\n', length(dict_keys));

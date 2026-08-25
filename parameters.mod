@@ -1,17 +1,15 @@
 % 1. VARIABLES AND PARAMETERS
-var C I_k K N R W Y D Z Z_i Z_a I_zi I_za S T tau_c B C_r C_c D_r R_b;
+var C I_k K N R W Y D Z Z_i Z_a I_zi I_za S T tau_c B C_r C_c R_b;
 varexo e_d;
-parameters alpha beta delta_k delta_za delta_zi eta psi rho_d omega_k omega_z omega_s omega_r psi_z rho_z xi nu_a kappa v tau_zi tau_za tau_c_ss phi_c S_ss L_ss R_star B_Y_ratio lambda_c eta_g;
+parameters alpha beta delta_k delta_za delta_zi eta psi rho_d omega_k omega_z omega_s omega_r psi_z nu_a kappa v tau_zi tau_za tau_c_ss phi_c S_ss L_ss R_star B_Y_ratio lambda_c eta_g lambda_z;
 
 @#if ACCEL_RECON == 1
     parameters phi_z Z_i_ss;
 @#endif
 
-@#if DEBT == 1 || CRDC == 1
-    varexo CRDC;
-@#elseif FUND == 1
-    var F I_f W_f;
-    parameters F_target tau_f omega_f;
+@#if CRDC == 1
+    varexo e_crdc;
+    parameters B_ss;
 @#endif
 
 % 2. SET PARAMETERS
@@ -28,29 +26,22 @@ omega_z  = 0.40;    % Public capital destruction scale
 omega_s  = 0.5;     % Public investment efficiency loss
 omega_r  = 0.15;    % Sovereign risk penalty factor (source: 2015 Standard & Poor's report)
 psi_z    = 0.0312;  % Elasticity of output wrt public infrastructure
-rho_z    = 0.90;    % CES weight tilted in favor of standard infrastructure
-xi       = 10.0;    % CES elasticity of substitution (High substitutability proxy for infinity)
 nu_a     = 1.667;   % Adaptation productivity scaling factor (R_za/R_zi = 50%/30%)
 kappa    = 0.5;     % Damage mitigation scaling factor (placeholder)
 v        = 5;       % Portfolio adjustment cost parameter
 tau_zi   = 0.013;   % Standard public investment to GDP
 tau_za   = 0.00001; % Adaptation public investment to GDP (0% prior to disaster)
 tau_c_ss = 0.125;   % Steady-state VAT 
-phi_c    = 0.10;    % Tax reaction to debt deviations
+phi_c    = 0.01;    % Tax reaction to debt deviations
 S_ss     = 0.6;     % Steady state public investment
 L_ss     = 0;       % Lump sum transfer placeholder
 B_Y_ratio = 0.256;  % Steady-state debt-to-GDP ratio
 R_star   = 1/beta - 1; % Steady-state international interest rate
 lambda_c = 0.34;    % Percentage of liquidity constrained households
 eta_g    = 0.002;   % Debt-elastic risk premium parameter
+lambda_z = 1;     % Public investment austerity scaling factor
 
 @#if ACCEL_RECON == 1
-    phi_z  = 0.3; % Reconstruction speed;
+    phi_z  = 0.5; % Reconstruction speed;
     Z_i_ss = 0;    % Steady state standard public capital placeholder;
-@#endif
-
-@#if FUND == 1
-    F_target = 0.10;
-    tau_f    = 0.05;
-    omega_f  = 0.50;
 @#endif
