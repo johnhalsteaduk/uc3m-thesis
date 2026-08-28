@@ -39,7 +39,7 @@ C*(1+tau_c) + I_k = Y + L_ss;
 
 @#if ACCEL_RECON == 1 && AUSTERITY == 1
     % 15. Austerity public investment rule
-    I_zi = tau_zi * Y + phi_z * (Z_i_ss - Z_i(-1)) - lambda_z * (B(-1)/Y(-1) - B_Y_ratio);
+    I_zi = tau_zi * Y + phi_z * (Z_i_ss - Z_i(-1)) - lambda_z * (q(-1)*B(-1)/Y(-1) - B_Y_ratio);
 @#elseif ACCEL_RECON == 1 && AUSTERITY == 0
     % 15. Accelerated standard public investment rule
     I_zi = tau_zi * Y + phi_z * (Z_i_ss - Z_i(-1));
@@ -49,7 +49,11 @@ C*(1+tau_c) + I_k = Y + L_ss;
 @#endif
 
 % 16. Adaptation public investment rule
-I_za = tau_za * Y;
+@#if CRDC == 1 && RESILIENCE == 1
+    I_za = tau_za * Y + e_crdc*B_ss;
+@#else
+    I_za = tau_za * Y;
+@#endif
 
 % 17. Non-Ricardian Budget Constraint
 C_c*(1+tau_c) = W*N + L_ss;
@@ -57,31 +61,27 @@ C_c*(1+tau_c) = W*N + L_ss;
 % 18. Aggregate Consumption
 C = (1 - lambda_c)*C_r + lambda_c*C_c;
 
-% 19. Risk premium
-R_b = (1 + omega_r*D) * (R_star + eta_g*(B/Y - B_Y_ratio));
+% 19. Risk premium (now based on market value of debt: q*B)
+R_b = (1 + omega_r*D) * (R_star + eta_g*(q*B/Y - B_Y_ratio));
 
-@#if DEBT == 1
+% 19b. Long-Duration Bond Pricing Equation
+q = (1 + (1 - delta_b)*q(+1)) / (1 + R_b);
+
+@#if CRDC == 1
     % 20. Government Budget Constraint
-    B = (1 + R_b(-1))*B(-1) + I_zi + I_za + L_ss - T;
-
-    % 21. Fiscal Rule for Consumption Tax
-    tau_c = tau_c_ss + phi_c * (B/Y - B_Y_ratio);
-@#elseif  CRDC == 1
+    q*(B - (1 - delta_b)*B(-1)) = B(-1) - e_crdc*B_ss + I_zi + I_za + L_ss - T - G_ss;
+@#else
     % 20. Government Budget Constraint
-    B = (1 + R_b(-1))*B(-1) - e_crdc*(R_b(-1)-R_star)*B_ss + I_zi + I_za + L_ss - T;
+    q*(B - (1 - delta_b)*B(-1)) = B(-1) + I_zi + I_za + L_ss - T - G_ss;
+@#endif
 
+@#if DEBT == 1 || CRDC == 1
     % 21. Fiscal Rule for Consumption Tax
-    tau_c = tau_c_ss + phi_c * (B/Y - B_Y_ratio);
+    tau_c = tau_c_ss + phi_c * (q*B/Y - B_Y_ratio);
 @#elseif DEBT_ONLY == 1
-    % 20. Government Budget Constraint
-    B = (1 + R_b(-1))*B(-1) + I_zi + I_za + L_ss - T;
-    
     % 21. Fiscal Rule for Consumption Tax (Locked Flat)
     tau_c = tau_c_ss;
 @#else
-    % 20. Government Budget Constraint
-    B = (1 + R_star)*B(-1) + I_zi + I_za + L_ss - T;
-
-    % 21. Debt Rule (No new borrowing)
+    % 21. Debt Rule (No new borrowing, just replacing decayed coupons)
     B = B(-1);
 @#endif
