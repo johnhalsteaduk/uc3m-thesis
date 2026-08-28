@@ -23,6 +23,7 @@ function [ys, params, check] = main_steadystate(ys, ~, M_, ~)
     R_star   = params(strcmp(param_names, 'R_star'));
     lambda_c = params(strcmp(param_names, 'lambda_c'));
     delta_b  = params(strcmp(param_names, 'delta_b'));
+    q_ss     = params(strcmp(param_names, 'q_ss'));
 
     R_ss = 1/beta - (1-delta_k);
     K_Y_ratio = alpha / R_ss;
@@ -42,7 +43,6 @@ function [ys, params, check] = main_steadystate(ys, ~, M_, ~)
     Y_ss = X * N_ss^((1-alpha)/(1-alpha-psi_z));
     C_ss = Omega_C * Y_ss;
     T_ss = tau_c_ss * C_ss;
-    q_ss = 1 / (R_star + delta_b);
     B_ss = B_Y_ratio * Y_ss / q_ss;
     R_b_ss = R_star;
    
@@ -63,7 +63,7 @@ function [ys, params, check] = main_steadystate(ys, ~, M_, ~)
     
     % Exogenous and structural steady states
     D_ss = 0;
-    D_crdc_ss = 0;
+    F_ss = 0;
 
     % Pass computed ss params back to Dynare's parameter array
     params(strcmp(param_names, 'L_ss')) = L_ss;
@@ -77,10 +77,10 @@ function [ys, params, check] = main_steadystate(ys, ~, M_, ~)
     
     endo_dict = dictionary(["Y", "K", "N", "C", "C_r", "C_c", "I_k", "R", "W", "D", ...
                             "Z_i", "Z_a", "I_zi", "I_za", "S", "Z", "T", "B", "tau_c", ...
-                            "R_b", "q"], ...
+                            "R_b", "q", "F"], ...
                            [Y_ss, K_ss, N_ss, C_ss, C_r_ss, C_c_ss, I_ss, R_ss, W_ss, D_ss, ...
                             Z_i_ss, Z_a_ss, I_zi_ss, I_za_ss, S_ss, Z_ss, T_ss, B_ss, tau_c_ss, ...
-                            R_b_ss, q_ss]);
+                            R_b_ss, q_ss, F_ss]);
 
     dict_keys = keys(endo_dict);
     fprintf('\nNumber of steady state vars: %d\n', length(dict_keys));

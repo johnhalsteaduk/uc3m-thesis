@@ -2,21 +2,18 @@
 % Master Scenario Runner for Dynare
 % =========================================================================
 scenarios = {
-    % Name                                          ACCEL  DEBT  CRDC  ADAPT  AUST  RESIL  DEBT_ONLY
+    % Name                                          ACCEL  DEBT  CRDC  ADAPT  AUST  DEBT_ONLY TAX_CUT TRANSFER
     % --- Part 1: Baseline & Replication ---
-    'baseline_no_accel',                              0,     0,    0,    0,     0,    0,     0;
-    'baseline_accel',                                 1,     0,    0,    0,     0,    0,     0;
-    'debt_only_accel',                                1,     0,    0,    0,     0,    0,     1;
-    'baseline_accel_adaptation',                      1,     0,    0,    1,     0,    0,     0;
+    'baseline_no_accel',                              0,     0,    0,    0,     0,      0,       0,      0;
+    'baseline_accel',                                 1,     0,    0,    0,     0,      0,       0,      0;
+    'debt_only_accel',                                1,     0,    0,    0,     0,      1,       0,      0;
+    'baseline_accel_adaptation',                      1,     0,    0,    1,     0,      0,       0,      0;
     
-    % --- Part 2: CRDC, Austerity & Resilience Extensions ---
-    'debt_accel_adaptation',                          1,     1,    0,    1,     0,    0,     0;
-    'crdc_accel_adaptation',                          1,     0,    1,    1,     0,    0,     0;
-    'crdc_accel_adaptation_resilience',               1,     0,    1,    1,     0,    1,     0; % Added for your new comparison
-    'debt_accel_adaptation_austerity',                1,     1,    0,    1,     1,    0,     0;
-    'crdc_accel_adaptation_austerity',                1,     0,    1,    1,     1,    0,     0;
-    'debt_accel_adaptation_austerity_resilience',     1,     1,    0,    1,     1,    1,     0;
-    'crdc_accel_adaptation_austerity_resilience',     1,     0,    1,    1,     1,    1,     0;
+    % --- Part 2: CRDC Tax Cut vs Transfer Comparison ---
+    'debt_accel_adaptation',                          1,     1,    0,    1,     0,      0,       0,      0;
+    'crdc_accel_adaptation',                          1,     0,    1,    1,     0,      0,       0,      0;
+    'crdc_accel_adaptation_tax_cut',                  1,     0,    1,    1,     0,      0,       1,      0;
+    'crdc_accel_adaptation_transfer',                 1,     0,    1,    1,     0,      0,       0,      1;
 };
 
 for i = 1:size(scenarios, 1)
@@ -29,8 +26,9 @@ for i = 1:size(scenarios, 1)
     fprintf(fid, '@#define CRDC        = %d\n', scenarios{i, 4});
     fprintf(fid, '@#define ADAPTATION  = %d\n', scenarios{i, 5});
     fprintf(fid, '@#define AUSTERITY   = %d\n', scenarios{i, 6});
-    fprintf(fid, '@#define RESILIENCE  = %d\n', scenarios{i, 7});
-    fprintf(fid, '@#define DEBT_ONLY   = %d\n', scenarios{i, 8});
+    fprintf(fid, '@#define DEBT_ONLY   = %d\n', scenarios{i, 7});
+    fprintf(fid, '@#define TAX_CUT     = %d\n', scenarios{i, 8});
+    fprintf(fid, '@#define TRANSFER    = %d\n', scenarios{i, 9});
     fclose(fid);
     
     % Run Dynare and save results

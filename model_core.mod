@@ -35,7 +35,11 @@ S = S_ss - omega_s*D;
 T = tau_c*C;
 
 % 14. Household Budget Constraint
-C*(1+tau_c) + I_k = Y + L_ss;
+@#if TRANSFER == 1
+    C*(1+tau_c) + I_k = Y + L_ss + e_crdc*B_ss;
+@#else
+    C*(1+tau_c) + I_k = Y + L_ss;
+@#endif
 
 @#if ACCEL_RECON == 1 && AUSTERITY == 1
     % 15. Austerity public investment rule
@@ -49,14 +53,14 @@ C*(1+tau_c) + I_k = Y + L_ss;
 @#endif
 
 % 16. Adaptation public investment rule
-@#if CRDC == 1 && RESILIENCE == 1
-    I_za = tau_za * Y + e_crdc*B_ss;
-@#else
-    I_za = tau_za * Y;
-@#endif
+I_za = tau_za * Y;
 
 % 17. Non-Ricardian Budget Constraint
-C_c*(1+tau_c) = W*N + L_ss;
+@#if TRANSFER == 1
+    C_c*(1+tau_c) = W*N + L_ss + e_crdc*(B_ss/lambda_c);
+@#else
+    C_c*(1+tau_c) = W*N + L_ss;
+@#endif
 
 % 18. Aggregate Consumption
 C = (1 - lambda_c)*C_r + lambda_c*C_c;
@@ -64,24 +68,36 @@ C = (1 - lambda_c)*C_r + lambda_c*C_c;
 % 19. Risk premium (now based on market value of debt: q*B)
 R_b = (1 + omega_r*D) * (R_star + eta_g*(q*B/Y - B_Y_ratio));
 
-% 19b. Long-Duration Bond Pricing Equation
+% 20. Long-Duration Bond Pricing Equation
 q = (1 + (1 - delta_b)*q(+1)) / (1 + R_b);
 
+% 21. Government Budget Constraint
 @#if CRDC == 1
-    % 20. Government Budget Constraint
-    q*(B - (1 - delta_b)*B(-1)) = B(-1) - e_crdc*B_ss + I_zi + I_za + L_ss - T - G_ss;
+    @#if TRANSFER == 1 || TAX_CUT == 1
+        q*(B - (1 - delta_b)*B(-1)) = B(-1) + I_zi + I_za + L_ss - T - G_ss + (1 - e_crdc)*(1 + R_star)*F(-1);
+    @#else
+        q*(B - (1 - delta_b)*B(-1)) = B(-1) + I_zi + I_za + L_ss - T - G_ss - e_crdc*B_ss + (1 - e_crdc)*(1 + R_star)*F(-1);
+    @#endif
 @#else
-    % 20. Government Budget Constraint
     q*(B - (1 - delta_b)*B(-1)) = B(-1) + I_zi + I_za + L_ss - T - G_ss;
 @#endif
 
+% 22. Fiscal Rule (Taxes react to total debt: standard bonds + capitalized CRDC stock)
 @#if DEBT == 1 || CRDC == 1
-    % 21. Fiscal Rule for Consumption Tax
-    tau_c = tau_c_ss + phi_c * (q*B/Y - B_Y_ratio);
+    @#if TAX_CUT == 1
+        tau_c = tau_c_ss + phi_c * ((q*B+F)/Y - B_Y_ratio) - e_crdc*(B_ss/C);
+    @#else
+        tau_c = tau_c_ss + phi_c * ((q*B+F)/Y - B_Y_ratio);
+    @#endif
 @#elseif DEBT_ONLY == 1
-    % 21. Fiscal Rule for Consumption Tax (Locked Flat)
     tau_c = tau_c_ss;
 @#else
-    % 21. Debt Rule (No new borrowing, just replacing decayed coupons)
     B = B(-1);
+@#endif
+
+% 23. CRDC Deferred Obligations Stock
+@#if CRDC == 1
+    F = e_crdc*B_ss + (1 - (1 - e_crdc))*(1 + R_star)*F(-1);
+@#else
+    F = 0;
 @#endif

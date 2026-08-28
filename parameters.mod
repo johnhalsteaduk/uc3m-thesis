@@ -1,5 +1,5 @@
 % 1. VARIABLES AND PARAMETERS
-var C I_k K N R W Y D Z Z_i Z_a I_zi I_za S T tau_c B C_r C_c R_b q;
+var C I_k K N R W Y D Z Z_i Z_a I_zi I_za S T tau_c B C_r C_c R_b q F;
 varexo e_d e_crdc;
 parameters alpha beta delta_k delta_za delta_zi eta psi rho_d omega_k omega_z omega_s omega_r psi_z nu_a kappa v tau_zi tau_za tau_c_ss phi_c S_ss L_ss R_star B_Y_ratio G_Y_ratio lambda_c eta_g lambda_z delta_b q_ss G_ss phi_z Z_i_ss B_ss;
 
@@ -35,8 +35,9 @@ delta_b  = 0.188;   % Bond decay rate
 phi_z  = 2;   % Reconstruction speed;
 Z_i_ss = 0;     % Steady state standard public capital placeholder;
 G_ss = 0;
-q_ss = 0;
+q_ss = 1 / (R_star + delta_b);
 B_ss = 0;
+gamma = 0.5; % amount of crdc relief directed to tax cuts or transfers
 
 @#if ADAPTATION == 1
     tau_za = G_Y_ratio; % Adaptation public investment to GDP
