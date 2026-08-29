@@ -44,16 +44,8 @@ C*(1+tau_c) + I_k = Y + L_ss;
     I_zi = tau_zi * Y;
 @#endif
 
-% 15b. Marginal Benefits
-MB_b = R_b + (1 + omega_r*D) * eta_g * (q*B(-1)/Y);
-MB_za = (D * pi * nu_D) / (1 + pi * Z_a(-1))^(nu_D + 1);
-
 % 16. Adaptation public investment rule
-@#if RESILIENCE == 1
-    I_za = tau_za * Y + zeta * (MB_za / MB_b)*e_crdc * B_ss;
-@#else
-    I_za = tau_za * Y;
-@#endif
+I_za = tau_za * Y;
 
 % 17. Non-Ricardian Budget Constraint
 C_c*(1+tau_c) = W*N + L_ss;
@@ -62,17 +54,17 @@ C_c*(1+tau_c) = W*N + L_ss;
 C = (1 - lambda_c)*C_r + lambda_c*C_c;
 
 % 19. Risk premium (now based on market value of debt: q*B)
-R_b = (1 + omega_r*D) * (R_star + eta_g*(q*B/Y - B_Y_ratio));
+@#if EXP_RISK
+    R_b = (1 + omega_r*D) * (R_star + eta_g * (exp(kappa_g * (q*B/Y - B_Y_ratio)) - 1));
+@#else
+    R_b = (1 + omega_r*D) * (R_star + eta_g*(q*B/Y - B_Y_ratio));
+@#endif
 
 % 20. Long-Duration Bond Pricing Equation
 q = (1 + (1 - delta_b)*q(+1)) / (1 + R_b);
 
 % 21. Government Budget Constraint
-@#if CRDC == 1
-    q*(B - (1 - delta_b)*B(-1)) = B(-1) + I_zi + I_za + L_ss - T - G_ss - e_crdc*B_ss + (1 - e_crdc)*(1 + R_star)*F(-1);
-@#else
-    q*(B - (1 - delta_b)*B(-1)) = B(-1) + I_zi + I_za + L_ss - T - G_ss;
-@#endif
+q*(B - (1 - delta_b)*B(-1)) = B(-1) + I_zi + I_za + L_ss - T - G_ss + (kappa_b/2)*(B - B(-1))^2 - e_crdc*B_ss + (1 - e_crdc)*(1 + R_star)*F(-1);
 
 % 22. Fiscal Rule (Taxes react to total debt: standard bonds + capitalized CRDC stock)
 @#if DEBT_ONLY == 1
@@ -84,8 +76,4 @@ q = (1 + (1 - delta_b)*q(+1)) / (1 + R_b);
 @#endif
 
 % 23. CRDC Deferred Obligations Stock
-@#if CRDC == 1
-    F = e_crdc*B_ss + (1 - (1 - e_crdc))*(1 + R_star)*F(-1);
-@#else
-    F = 0;
-@#endif
+F = e_crdc*B_ss + e_crdc*(1 + R_star)*F(-1);

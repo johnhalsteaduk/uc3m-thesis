@@ -1,8 +1,8 @@
 % 1. VARIABLES AND PARAMETERS
-var C I_k K N R W Y D Z Z_i Z_a I_zi I_za S T tau_c B C_r C_c R_b q F MB_b MB_za chi_za;
+var C I_k K N R W Y D Z Z_i Z_a I_zi I_za S T tau_c B C_r C_c R_b q F;
 varexo e_d e_crdc;
 
-parameters alpha beta delta_k delta_za delta_zi eta psi rho_d omega_k omega_z omega_s omega_r psi_z nu_a pi nu_D v tau_zi tau_za tau_c_ss phi_c S_ss L_ss R_star B_Y_ratio G_Y_ratio lambda_c eta_g delta_b q_ss G_ss phi_z Z_i_ss Z_a_ss B_ss zeta;
+parameters alpha beta delta_k delta_za delta_zi eta psi rho_d omega_k omega_z omega_s omega_r psi_z nu_a pi nu_D v tau_zi tau_za tau_c_ss phi_c S_ss L_ss R_star B_Y_ratio G_Y_ratio lambda_c eta_g delta_b q_ss G_ss phi_z Z_i_ss Z_a_ss B_ss kappa_b kappa_g;
 
 % 2. SET PARAMETERS
 alpha    = 0.35;    % Capital share (midpoint between traded 0.3 and non-traded 0.4)
@@ -39,7 +39,14 @@ Z_a_ss   = 0.00;    % Steady state adaptation public capital placeholder
 G_ss     = 0.00;    % Steady state grant placeholder
 q_ss     = 1 / (R_star + delta_b);
 B_ss     = 0.00;    % Steady state debt placeholder
-zeta     = 0.35;
+
+@#if ADJ_COST
+    kappa_b  = 10;     % Debt issuance adjustment costs
+@#else
+    kappa_b = 0;
+@#endif
+
+kappa_g = 20.0;     % Exponential risk premium scaling parameter
 
 @#if ADAPTATION == 1
     tau_za = G_Y_ratio; % Adaptation public investment to GDP

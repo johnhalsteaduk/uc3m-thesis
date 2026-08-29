@@ -2,19 +2,26 @@
 % Master Scenario Runner for Dynare
 % =========================================================================
 scenarios = {
-    % Name                                          ACCEL  DEBT_ONLY  TAX_ONLY  CRDC  ADAPT  RESIL  REPEAT_SHOCKS
+    % Name                           ACCEL  DEBT_ONLY  TAX_ONLY  CRDC  ADAPT  ADJ_COST  EXP_RISK  REPEAT_SHOCKS
     % --- Part 1: Baseline & Replication (Single Shock at t=5) ---
-    'baseline_no_accel',                              0,       0,         0,      0,    0,     0,        0;
-    'baseline_accel',                                 1,       0,         0,      0,    0,     0,        0;
-    'tax_only_accel',                                 1,       0,         1,      0,    0,     0,        0;
-    'debt_only_accel',                                1,       1,         0,      0,    0,     0,        0;
-    'baseline_accel_adaptation',                      1,       0,         0,      0,    1,     0,        0;
+    'baseline_no_accel',               0,       0,         0,      0,    0,      0,        0,          0;
+    'baseline_accel',                  1,       0,         0,      0,    0,      0,        0,          0;
+    'tax_only_accel',                  1,       0,         1,      0,    0,      0,        0,          0;
+    'debt_only_accel',                 1,       1,         0,      0,    0,      0,        0,          0;
+    'baseline_accel_adaptation',       1,       0,         0,      0,    1,      0,        0,          0;
     
-    % --- Part 2: CRDC Resilience Comparison (Repeating Shocks, No Accel) ---
-    'debt_adaptation',                                0,       0,         0,      0,    1,     0,        1;
-    'debt_resilience',                                0,       0,         0,      0,    1,     1,        1;    
-    'crdc_adaptation',                                0,       0,         0,      1,    1,     0,        1;
-    'crdc_resilience',                                0,       0,         0,      1,    1,     1,        1;
+    % --- Part 2: CRDC Friction Comparisons (Repeating Shocks, No Accel) ---
+    % 1. Normal Market Conditions (Linear Premium, No Delay Costs)
+    'debt_normal',                     0,       0,         0,      0,    1,      0,        0,          1;
+    'crdc_normal',                     0,       0,         0,      1,    1,      0,        0,          1;
+    
+    % 2. Negotiation Lags / Deadweight Loss (Adjustment Costs Active)
+    'debt_adj_cost',                   0,       0,         0,      0,    1,      1,        0,          1;
+    'crdc_adj_cost',                   0,       0,         0,      1,    1,      1,        0,          1;
+    
+    % 3. Sudden Stops / Credit Freeze (Exponential Risk Active)
+    'debt_exp_risk',                   0,       0,         0,      0,    1,      0,        1,          1;
+    'crdc_exp_risk',                   0,       0,         0,      1,    1,      0,        1,          1;
 };
 
 for i = 1:size(scenarios, 1)
@@ -27,7 +34,8 @@ for i = 1:size(scenarios, 1)
     fprintf(fid, '@#define TAX_ONLY     = %d\n', scenarios{i, 4});
     fprintf(fid, '@#define CRDC         = %d\n', scenarios{i, 5});
     fprintf(fid, '@#define ADAPTATION   = %d\n', scenarios{i, 6});
-    fprintf(fid, '@#define RESILIENCE   = %d\n', scenarios{i, 7});
+    fprintf(fid, '@#define ADJ_COST     = %d\n', scenarios{i, 7});
+    fprintf(fid, '@#define EXP_RISK     = %d\n', scenarios{i, 8});
     fclose(fid);
     
     % --- Dynamic Shock Generator ---
@@ -38,7 +46,7 @@ for i = 1:size(scenarios, 1)
     % Set the first shock to occur in period 5 (representing 2015)
     first_shock_year = 5; 
     
-    if scenarios{i, 8} == 1
+    if scenarios{i, 9} == 1 % Check REPEAT_SHOCKS flag (now column 9)
         % Repeat shocks every X years, leaving a buffer at the end 
         num_shocks = floor((sim_periods - first_shock_year - 10) / shock_freq) + 1; 
     else
@@ -73,7 +81,7 @@ for i = 1:size(scenarios, 1)
     fprintf(fid, '    periods %s;\n', num2str(ed_periods));
     fprintf(fid, '    values %s;\n', num2str(ed_values));
     
-    if scenarios{i, 5} == 1 || scenarios{i, 7} == 1 % If CRDC OR RESILIENCE is active
+    if scenarios{i, 5} == 1 % If CRDC is active (column 5)
         fprintf(fid, '    var e_crdc;\n');
         fprintf(fid, '    periods %s;\n', num2str(crdc_periods));
         fprintf(fid, '    values %s;\n', num2str(crdc_values));

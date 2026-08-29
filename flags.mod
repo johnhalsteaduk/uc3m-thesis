@@ -3,4 +3,5 @@
 @#define TAX_ONLY     = 0
 @#define CRDC         = 1
 @#define ADAPTATION   = 1
-@#define RESILIENCE   = 1
+@#define ADJ_COST     = 0
+@#define EXP_RISK     = 1
