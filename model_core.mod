@@ -5,10 +5,10 @@
 W/(C*(1+tau_c)) = psi*N^eta;
 
 % 3. Private Investment
-I_k = K - (1 - delta_k - omega_k*D/(1 + kappa*Z_a(-1)))*K(-1);
+I_k = K - ((1 - D/(1 + pi*Z_a(-1))^nu_D)^omega_k - delta_k)*K(-1);
 
 % 4. Production function 
-Y = exp(-(1-omega_k*alpha-omega_z*psi_z)*D/(1+kappa*Z_a(-1)))*K(-1)^alpha * N^(1-alpha) * Z(-1)^psi_z;
+Y = (1 - D/(1 + pi*Z_a(-1))^nu_D)^(1 - omega_k*alpha - omega_z*psi_z) * K(-1)^alpha * N^(1-alpha) * Z(-1)^psi_z;
 
 % 5. Capital rental rate
 R = alpha*Y/K(-1);
@@ -20,10 +20,10 @@ W = (1 - alpha)*Y/N;
 D = rho_d*D(-1) + e_d;
 
 % 9. Standard public capital evolution
-Z_i = (1 - delta_zi - omega_z*D/(1 + kappa*Z_a(-1)))*Z_i(-1) + S*I_zi;
+Z_i = ((1 - D/(1 + pi*Z_a(-1))^nu_D)^omega_z - delta_zi)*Z_i(-1) + S*I_zi;
 
 % 10. Adaptation public capital evolution
-Z_a = (1 - delta_za - omega_z*D/(1 + kappa*Z_a(-1)))*Z_a(-1) + S*I_za;
+Z_a = ((1 - D/(1 + pi*Z_a(-1))^nu_D)^omega_z - delta_za)*Z_a(-1) + S*I_za;
 
 % 11. Effective public capital (assume perfect substitutes)
 Z = Z_i + nu_a*Z_a;
@@ -35,32 +35,28 @@ S = S_ss - omega_s*D;
 T = tau_c*C;
 
 % 14. Household Budget Constraint
-@#if TRANSFER == 1
-    C*(1+tau_c) + I_k = Y + L_ss + e_crdc*B_ss;
-@#else
-    C*(1+tau_c) + I_k = Y + L_ss;
-@#endif
+C*(1+tau_c) + I_k = Y + L_ss;
 
-@#if ACCEL_RECON == 1 && AUSTERITY == 1
-    % 15. Austerity public investment rule
-    I_zi = tau_zi * Y + phi_z * (Z_i_ss - Z_i(-1)) - lambda_z * (q(-1)*B(-1)/Y(-1) - B_Y_ratio);
-@#elseif ACCEL_RECON == 1 && AUSTERITY == 0
-    % 15. Accelerated standard public investment rule
+% 15. Standard public investment rule
+@#if ACCEL_RECON == 1
     I_zi = tau_zi * Y + phi_z * (Z_i_ss - Z_i(-1));
 @#else
-    % 15. Baseline standard public investment rule
     I_zi = tau_zi * Y;
 @#endif
 
+% 15b. Marginal Benefits
+MB_b = R_b + (1 + omega_r*D) * eta_g * (q*B(-1)/Y);
+MB_za = (D * pi * nu_D) / (1 + pi * Z_a(-1))^(nu_D + 1);
+
 % 16. Adaptation public investment rule
-I_za = tau_za * Y;
+@#if RESILIENCE == 1
+    I_za = tau_za * Y + zeta * (MB_za / MB_b)*e_crdc * B_ss;
+@#else
+    I_za = tau_za * Y;
+@#endif
 
 % 17. Non-Ricardian Budget Constraint
-@#if TRANSFER == 1
-    C_c*(1+tau_c) = W*N + L_ss + e_crdc*(B_ss/lambda_c);
-@#else
-    C_c*(1+tau_c) = W*N + L_ss;
-@#endif
+C_c*(1+tau_c) = W*N + L_ss;
 
 % 18. Aggregate Consumption
 C = (1 - lambda_c)*C_r + lambda_c*C_c;
@@ -73,26 +69,18 @@ q = (1 + (1 - delta_b)*q(+1)) / (1 + R_b);
 
 % 21. Government Budget Constraint
 @#if CRDC == 1
-    @#if TRANSFER == 1 || TAX_CUT == 1
-        q*(B - (1 - delta_b)*B(-1)) = B(-1) + I_zi + I_za + L_ss - T - G_ss + (1 - e_crdc)*(1 + R_star)*F(-1);
-    @#else
-        q*(B - (1 - delta_b)*B(-1)) = B(-1) + I_zi + I_za + L_ss - T - G_ss - e_crdc*B_ss + (1 - e_crdc)*(1 + R_star)*F(-1);
-    @#endif
+    q*(B - (1 - delta_b)*B(-1)) = B(-1) + I_zi + I_za + L_ss - T - G_ss - e_crdc*B_ss + (1 - e_crdc)*(1 + R_star)*F(-1);
 @#else
     q*(B - (1 - delta_b)*B(-1)) = B(-1) + I_zi + I_za + L_ss - T - G_ss;
 @#endif
 
 % 22. Fiscal Rule (Taxes react to total debt: standard bonds + capitalized CRDC stock)
-@#if DEBT == 1 || CRDC == 1
-    @#if TAX_CUT == 1
-        tau_c = tau_c_ss + phi_c * ((q*B+F)/Y - B_Y_ratio) - e_crdc*(B_ss/C);
-    @#else
-        tau_c = tau_c_ss + phi_c * ((q*B+F)/Y - B_Y_ratio);
-    @#endif
-@#elseif DEBT_ONLY == 1
+@#if DEBT_ONLY == 1
     tau_c = tau_c_ss;
-@#else
+@#elseif TAX_ONLY == 1
     B = B(-1);
+@#else
+    tau_c = tau_c_ss + phi_c * ((q*B+F)/Y - B_Y_ratio);
 @#endif
 
 % 23. CRDC Deferred Obligations Stock
