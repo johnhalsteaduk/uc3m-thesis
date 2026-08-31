@@ -1,6 +1,6 @@
 @#include "flags.mod"
 @#include "parameters.mod"
-@#include "omega_setting.mod"
+% @#include "omega_setting.mod"
 
 model;
     @#include "model_core.mod"

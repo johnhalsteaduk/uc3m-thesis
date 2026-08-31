@@ -6,7 +6,6 @@ function [ys, params, check] = main_steadystate(ys, ~, M_, ~)
     
     % Extract core shared parameters
     alpha    = params(strcmp(param_names, 'alpha'));
-    beta     = params(strcmp(param_names, 'beta'));
     delta_k  = params(strcmp(param_names, 'delta_k'));
     delta_zi = params(strcmp(param_names, 'delta_zi'));
     delta_za = params(strcmp(param_names, 'delta_za'));
@@ -63,19 +62,16 @@ function [ys, params, check] = main_steadystate(ys, ~, M_, ~)
     D_ss = 0;
     D_r_ss = 0;
     F_ss = 0;
-
-    % Pass computed ss params back to Dynare's parameter array
-    params(strcmp(param_names, 'L_ss')) = L_ss;
     
     % Map to dictionary based on active extension
     endo_names_in_model = strtrim(cellstr(M_.endo_names));
     
     endo_dict = dictionary(["Y", "K", "N", "C", "C_r", "C_c", "I_k", "R_k", "W", "D", ...
                             "D_r", "Z_i", "Z_a", "I_zi", "I_za", "S", "Z", "T", "B", ...
-                            "tau_c", "R_b", "Q", "F"], ...
+                            "tau_c", "R_b", "Q", "F", "L"], ...
                            [Y_ss, K_ss, N_ss, C_ss, C_r_ss, C_c_ss, I_ss, R_k_ss, W_ss, D_ss, ...
                             D_r_ss, Z_i_ss, Z_a_ss, I_zi_ss, I_za_ss, S_ss, Z_ss, T_ss, B_ss, ...
-                            tau_c_ss, R_b_ss, Q_ss, F_ss]);
+                            tau_c_ss, R_b_ss, Q_ss, F_ss, L_ss]);
 
     dict_keys = keys(endo_dict);
     fprintf('\nNumber of steady state vars: %d\n', length(dict_keys));
